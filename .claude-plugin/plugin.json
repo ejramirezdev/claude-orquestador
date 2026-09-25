@@ -1,14 +1,21 @@
 {
   "name": "orquestador",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Claude como líder técnico: planifica, parte el trabajo en piezas, delega cada pieza a agentes de Cursor CLI en worktrees aislados, los vigila, revisa cada diff y fusiona solo lo aprobado.",
   "author": {
     "name": "Easy Enterprise"
   },
   "license": "MIT",
-  "keywords": ["orquestacion", "cursor-agent", "delegacion", "worktrees", "revision-de-codigo"],
+  "keywords": [
+    "orquestacion",
+    "cursor-agent",
+    "delegacion",
+    "worktrees",
+    "revision-de-codigo"
+  ],
   "skills": [
     "./skills/orquestar",
-    "./skills/orquestador-setup"
+    "./skills/orquestador-setup",
+    "./skills/orquestador-quitar"
   ]
 }

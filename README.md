@@ -51,6 +51,20 @@ Consejos:
 - Si tienes que reiniciar, `claude --resume` recupera la conversación; además cada funcionalidad deja un
   `.scratch/<feature>/ESTADO.md` para retomar desde cero.
 
+## Pausar o quitar
+
+- **Quitarlo de un proyecto:** `/orquestador-quitar`. Borra el bloque que el setup agregó al `CLAUDE.md`
+  y sus líneas del `.gitignore` (van entre marcadores `orquestador:inicio`/`orquestador:fin`), te ofrece
+  limpiar los worktrees ya fusionados y hace commit. No toca tu código, tus ramas ni tus specs.
+- **Pausarlo en todos los proyectos:** `/plugin disable orquestador@orquestador` (y `/plugin enable …`
+  para volver). Con el plugin desactivado, Claude trabaja de forma normal aunque el bloque siga en un
+  `CLAUDE.md`: el propio bloque lo indica.
+- **Desinstalarlo:** `/plugin uninstall orquestador@orquestador` y, opcionalmente,
+  `/plugin marketplace remove orquestador`.
+
+El plugin no instala hooks, no cambia la configuración de Claude Code y no deja procesos corriendo. Lo
+único que escribe en un proyecto es lo que hace `/orquestador-setup`, y `/orquestador-quitar` lo deshace.
+
 ## Contenido
 
 ```
@@ -60,4 +74,5 @@ skills/orquestar/        la metodología (SKILL.md) + referencias + scripts
   scripts/               lanzar-agente (.ps1/.sh), vigilar-agente.sh, revisar-recursos (.ps1/.sh),
                          limpiar-worktrees.sh
 skills/orquestador-setup/  preparación del proyecto (se invoca a mano)
+skills/orquestador-quitar/ deshace la preparación en un proyecto (se invoca a mano)
 ```
