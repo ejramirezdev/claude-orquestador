@@ -1,0 +1,16 @@
+{
+  "name": "orquestador",
+  "owner": {
+    "name": "Easy Enterprise"
+  },
+  "description": "Metodología de orquestación: Claude planifica y revisa, agentes de Cursor implementan.",
+  "plugins": [
+    {
+      "name": "orquestador",
+      "source": "./",
+      "description": "Claude como líder técnico que delega la implementación a agentes de Cursor CLI y revisa cada diff.",
+      "category": "productivity",
+      "keywords": ["orquestacion", "cursor-agent", "delegacion"]
+    }
+  ]
+}
