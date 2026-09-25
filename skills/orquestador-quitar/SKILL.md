@@ -18,7 +18,9 @@ paso en una línea.
    Si no encuentras los marcadores, muestra al usuario la sección `## Orquestador` que encuentres y
    pregunta antes de tocarla.
 3. **`.gitignore`.** Borra las líneas entre `# orquestador:inicio` y `# orquestador:fin`, marcadores
-   incluidos.
+   incluidos (y el archivo si queda vacío y lo creó el setup). Los logs de agentes que esas líneas
+   ignoraban (`.scratch/**/logs/`, `*progreso*`, `*.pid`) quedan como archivos sin trackear: ofrécele al
+   usuario borrarlos; son solo registros de ejecución.
 4. **Worktrees.** Corre `../orquestar/scripts/limpiar-worktrees.sh` (relativo a la carpeta de esta skill) sin `--aplicar` y muestra
    la lista. Borra solo si el usuario lo confirma. Las ramas y el código fusionado quedan intactos.
 5. **`.scratch/`.** Las specs, issues y `ESTADO.md` son documentación del proyecto: no las borres salvo
