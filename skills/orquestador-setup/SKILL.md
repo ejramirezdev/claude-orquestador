@@ -17,8 +17,12 @@ usuario el resultado de cada uno en una línea y pide solo lo que no puedas hace
      Tras instalar, vuelve a comprobar `cursor-agent --version`. Si sigue sin encontrarse, es un tema de
      PATH de la sesión actual: pide al usuario que abra una terminal nueva (o reinicia la herramienta
      PowerShell/Bash) y reintenta antes de seguir.
-   - **Sesión.** Corre `cursor-agent models`. El login (`cursor-agent login`) abre un navegador y no se
-     puede automatizar: si no hay sesión, dile al usuario que lo corra él mismo y espera.
+   - **Sesión.** Corre `cursor-agent status`. Si no hay sesión, corre tú mismo `cursor-agent login` (con
+     la herramienta PowerShell/Bash, en primer plano, con timeout largo — varios minutos): abre el
+     navegador por su cuenta y el comando queda esperando hasta que el usuario termine de autenticarse
+     ahí. Dile al usuario, en una línea, que se autentique en la pestaña que se acaba de abrir; no le
+     pidas que escriba ningún comando. Si el comando corta por timeout antes de que termine, vuelve a
+     correr `cursor-agent status`: si ya quedó autenticado, sigue; si no, repite `cursor-agent login`.
    Hecho cuando: `cursor-agent models` lista modelos.
 2. **Modelos.** Muestra los modelos disponibles y pregunta cuál usar para piezas **complejas** y cuál
    para **sencillas** (recomendación: el más fuerte de razonamiento para complejas, uno rápido para
