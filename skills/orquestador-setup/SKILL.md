@@ -9,9 +9,16 @@ disable-model-invocation: true
 Deja el proyecto listo para la skill `orquestar`. Cada paso termina con su comprobación; informa al
 usuario el resultado de cada uno en una línea y pide solo lo que no puedas hacer tú.
 
-1. **Cursor CLI.** `cursor-agent --version` (en Windows, desde la herramienta PowerShell) y
-   `cursor-agent models`. Si no está instalado o no hay sesión, dale al usuario los pasos (instalar
-   Cursor CLI desde la documentación de Cursor y `cursor-agent login`) y espera.
+1. **Cursor CLI.** Comprueba con `cursor-agent --version` (en Windows, desde la herramienta PowerShell).
+   - **Si no está instalado**, avisa al usuario que vas a instalarlo con el comando oficial de Cursor y
+     pide confirmación antes de correrlo (descarga y ejecuta un script de internet):
+     - Windows (PowerShell): `irm 'https://cursor.com/install?win32=true' | iex`
+     - macOS/Linux/WSL (bash): `curl https://cursor.com/install -fsS | bash`
+     Tras instalar, vuelve a comprobar `cursor-agent --version`. Si sigue sin encontrarse, es un tema de
+     PATH de la sesión actual: pide al usuario que abra una terminal nueva (o reinicia la herramienta
+     PowerShell/Bash) y reintenta antes de seguir.
+   - **Sesión.** Corre `cursor-agent models`. El login (`cursor-agent login`) abre un navegador y no se
+     puede automatizar: si no hay sesión, dile al usuario que lo corra él mismo y espera.
    Hecho cuando: `cursor-agent models` lista modelos.
 2. **Modelos.** Muestra los modelos disponibles y pregunta cuál usar para piezas **complejas** y cuál
    para **sencillas** (recomendación: el más fuerte de razonamiento para complejas, uno rápido para

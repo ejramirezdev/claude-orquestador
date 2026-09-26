@@ -22,8 +22,9 @@ lanzamiento en Windows, y más (`skills/orquestar/referencias/problemas-conocido
 ## Requisitos
 
 - [Claude Code](https://claude.com/claude-code).
-- **Cursor CLI** instalado y con sesión iniciada (`cursor-agent login`). Comprueba con
-  `cursor-agent models`.
+- **Cursor CLI**: si no está instalado, `/orquestador-setup` lo instala (con tu confirmación) usando el
+  comando oficial de Cursor. Lo que no puede automatizar es la sesión: corre `cursor-agent login` tú
+  mismo (abre un navegador).
 - Git. El proyecto debe ser un repositorio con al menos un commit.
 - Windows: PowerShell (viene con el sistema). macOS/Linux: bash.
 
