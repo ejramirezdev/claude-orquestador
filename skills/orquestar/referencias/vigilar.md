@@ -7,23 +7,28 @@ lo sepa. Por eso cada agente lanzado lleva su vigía.
 
 ## El vigía
 
-`scripts/vigilar-agente.sh` es un script de shell: revisa cada 30 s el último commit del worktree, el
-tamaño del log de progreso y si el proceso del agente sigue vivo. **No consume tokens mientras corre**;
-solo cuesta cuando emite un evento.
+`scripts/vigilar-agente.sh` es un script de shell. Cada 20 s revisa tres cosas: el último commit del worktree, el log de progreso y si el proceso del agente sigue vivo. **No consume tokens mientras corre**: solo cuesta cuando emite un evento.
 
-Arráncalo con la herramienta Monitor (timeout máximo; re-ármalo si expira y el agente sigue vivo):
+Arráncalo con la herramienta Monitor, con el timeout máximo. **Un vigía por agente**, con `--etiqueta NN`:
 
 ```
-bash "<skill>/scripts/vigilar-agente.sh" --worktree "<ruta del worktree>" \
+bash "<skill>/scripts/vigilar-agente.sh" --etiqueta NN --worktree "<ruta del worktree>" \
   --log ".scratch/<feature>/logs/NN-lanzar-cursor.out" \
-  --progreso "<ruta del worktree>/.scratch/<feature>/logs/NN-progreso.md" [--verbose]
+  --progreso "<ruta del worktree>/.scratch/<feature>/logs/NN-progreso.md"
 ```
 
-Emite solo:
-- `COMMIT: <sha> <mensaje>` — revisa ya, aunque el proceso siga vivo.
-- `ALERTA: N min sin avance ni commit` — mira el log, los procesos y la memoria.
-- `FIN: el agente terminó` — revisa el resultado y la línea `fin exit=N` del log.
-- Con `--verbose`, además cada línea nueva del log de progreso (más eventos, más tokens).
+Eventos, cada uno precedido de `[NN]`:
+- `PROGRESO: <línea>`: cada paso que el agente anota, incluido su resumen final. Viene activado por defecto; `--silencioso` lo apaga cuando corren muchos agentes a la vez y el volumen de eventos importa más que la narración.
+- `COMMIT: <sha> <mensaje>`: revisa ya, aunque el proceso siga vivo.
+- `ALERTA: N min sin avance ni commit`: mira el log, los procesos y la memoria.
+- `AUTO` / `CUPO`: la cascada de cupo (ver `lanzar.md`).
+- `FIN: <línea fin/error>`: el agente terminó. Revisa el resultado.
+
+**Por qué uno por agente y no uno para todos.** Cada agente tiene su propio ciclo: se relanza, se le devuelve una corrección o se cae por cupo, y el de al lado sigue igual. Con un vigía por agente, relanzar uno solo reinicia su vigía; los demás siguen sin perder su estado. Con uno compartido, cada relanzamiento obliga a matarlo y rearmarlo para todos, y se pierde qué líneas ya se habían narrado. El costo en tokens es el mismo, porque lo que cuesta es cada evento emitido, no cada proceso.
+
+**Narra cada evento al usuario**, en una línea: qué hizo el agente y qué haces tú ahora. Ejemplos: "la pieza 02 escribió los tests en rojo, ahora implementa" o "la 03 terminó, reviso el diff". Es lo que hace que el usuario vea el trabajo avanzar sin preguntar "¿cómo va?". Los agentes terminan con un bloque `== RESUMEN ==` en su log de progreso (ver `plantillas.md`), que llega como `PROGRESO` antes del `FIN`: léelo antes de abrir el diff.
+
+**Rearmar.** El Monitor expira a los 30 min como máximo. Si expira y el agente sigue vivo, vuelve a lanzar el mismo comando: el vigía arranca desde el tamaño actual del log de progreso y no repite líneas ya narradas. Si relanzas el agente (con una corrección o para retomarlo), detén su vigía y arma uno nuevo; los de los otros agentes no se tocan.
 
 ## Qué hacer con cada evento
 

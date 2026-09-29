@@ -17,6 +17,11 @@ queda sin cupo aparece `cupo-agotado` / `CUPO:`: pasa a subagentes de Claude (`l
 agente murió por cupo y el lanzador no reintentó (p. ej. lo lanzaste sin el script), relánzalo tú con
 `-Modelo auto -Worktree <ruta>`.
 
+**El error de Cupo se ve "con espacios entre letras" y la cascada a `auto` no se dispara.**
+Hay dos síntomas relacionados: el vigía no ve la línea `fin`, y un `grep` sobre el log no encuentra nada.
+Causa: en Windows PowerShell 5.1, `*>>` escribe el stderr de `cursor-agent` en UTF-16. El log queda mezclado con nuestras líneas en UTF-8, `Select-String` no encuentra `out of usage` y la línea siguiente empieza con un byte NUL (`\0fin`). Se confirmó con una prueba: 423 bytes NUL y el patrón no se encuentra.
+Arreglo: `lanzar-agente.ps1` fija `$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'` antes de redirigir. El vigía, además, quita los NUL al leer el log. Si lanzas un agente a mano, pon esa misma línea al inicio de tu script.
+
 **Cursor rechaza el modelo al lanzar (el agente muere en segundos).** Se escribió a mano un id (`grok-4.8-high`) que
 no existe o tiene otro prefijo (`cursor-grok-…`). Pasa un nivel (`complejo`, `sencillo`) y deja
 que `resolver-modelo` lo resuelva; el lanzador aborta antes de gastar un agente si el id no existe.

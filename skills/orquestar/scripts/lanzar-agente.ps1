@@ -28,6 +28,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+# En Windows PowerShell 5.1 la redirección `*>>` escribe en UTF-16 por defecto: el log quedaría mezclado
+# (líneas nuestras en UTF-8 + salida de cursor-agent en UTF-16), Select-String no encontraría "out of usage"
+# (la cascada a auto no se dispararía) y el vigía vería "\0fin" en vez de "fin". 5.1 respeta este default
+# también en los operadores de redirección; en PowerShell 7 ya es UTF-8 y no cambia nada.
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 if (-not $Nombre -and -not $Worktree) { throw "Indica -Nombre (worktree nuevo) o -Worktree (retomar uno existente)." }
 if (-not (Test-Path $PromptFile)) { throw "No existe el archivo de prompt: $PromptFile" }
 if (-not (Get-Command cursor-agent -ErrorAction SilentlyContinue)) {

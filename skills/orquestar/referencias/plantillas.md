@@ -52,7 +52,9 @@ Lee primero `.scratch/<feature>/spec.md` (§<secciones>) y <otros archivos>.
 - Tests: <casos concretos que deben existir y pasar>
 - Verifica UNO A LA VEZ: <typegen/tsc/lint/tests/build exactos del proyecto>
 - Sin bases de datos reales, sin desplegar, sin llamar APIs de pago.
-- Registra cada paso terminado, una línea, en `.scratch/<feature>/logs/NN-progreso.md`.
+- Registra cada paso terminado, una línea con hora, en `.scratch/<feature>/logs/NN-progreso.md`
+  (el vigía narra cada línea al líder: una línea por paso real, no un párrafo al final).
+- Al terminar, agrega al final de ese log un bloque `== RESUMEN ==` con cuatro partes: archivos tocados, cada verificación con su resultado, las decisiones que tomaste y el issue no fijaba, y la lista de prueba manual.
 - Commit final en tu worktree con un mensaje que incluya lista de verificación manual y desviaciones.
 ```
 

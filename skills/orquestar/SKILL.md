@@ -35,9 +35,12 @@ carga de la skill). Antes de la primera tarea en un proyecto, confirma que se co
    Piezas con archivos disjuntos van en paralelo **solo si la RAM alcanza** (`scripts/revisar-recursos`). Lanza con `scripts/lanzar-agente` en segundo plano.
    Detalle y fallas de lanzamiento: [referencias/lanzar.md](referencias/lanzar.md).
    Hecho cuando: el worktree existe y el log del agente tiene la línea `inicio`.
-4. **Vigilar.** Por cada agente, un monitor con `scripts/vigilar-agente.sh` (commit, 15 min sin
-   avance, fin del proceso). Nunca esperes solo la notificación de salida: los agentes se cuelgan
-   después de terminar. Ver [referencias/vigilar.md](referencias/vigilar.md).
+4. **Vigilar.** Por cada agente, un monitor con `scripts/vigilar-agente.sh --etiqueta NN`. Avisa de:
+   - cada paso del log de progreso;
+   - cada commit;
+   - 15 min sin avance;
+   - el fin del proceso.
+   Narra cada evento al usuario en una línea. Nunca esperes solo la notificación de salida: los agentes se cuelgan después de terminar. Ver [referencias/vigilar.md](referencias/vigilar.md).
    Hecho cuando: el agente hizo su commit final o el vigía avisó de un problema.
 5. **Revisar el diff** contra la spec con la lista de [referencias/revisar.md](referencias/revisar.md).
    Algo mal → devuélvelo al **mismo** agente, en su mismo worktree y con el mismo modelo (o `auto` si ya se cayó en la cascada), con
