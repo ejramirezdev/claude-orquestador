@@ -5,15 +5,45 @@
 La tabla vigente vive en el bloque `## Orquestador` del `CLAUDE.md` del proyecto (la escribe
 `/orquestador-setup`). Por defecto:
 
-| Tipo de pieza | Ejemplos | Modelo |
+| Nivel | Ejemplos | Modelo que resuelve `-Modelo <nivel>` |
 |---|---|---|
-| **Compleja** | lógica nueva, varias partes del código a la vez, diseño, seguridad, IA | el modelo fuerte (p. ej. `grok-4.7-high`) |
-| **Sencilla** | cambio mecánico de una pieza, correr un script ya escrito, commit, renombrar | el modelo rápido (p. ej. `composer-2.5`) |
-| **Sin cupo** | Cursor responde `You're out of usage` | `auto` para todo, hasta que el usuario diga otra cosa |
+| `complejo` | seguridad, arquitectura, lógica nueva, varias partes del código a la vez, diseño, IA | **Grok más reciente**, esfuerzo `high` |
+| `sencillo` | cambio mecánico de una pieza, correr un script ya escrito, commit, renombrar | **Composer más reciente** |
+| `auto` | Cursor recomienda pasar a Auto (cupo del modelo agotado) | modo `auto` de Cursor, para todo |
 
-Ante la duda, _compleja_: rehacer un diff malo cuesta más que el modelo caro.
-Lista real de modelos de la cuenta: `cursor-agent models`. Una corrección vuelve al **mismo** agente
-con el **mismo** modelo.
+Ante la duda, _complejo_: rehacer un diff malo cuesta más que el modelo caro.
+
+**Nunca escribas a mano el id de un modelo Grok o Composer.** Los ids no siguen un patrón único
+(`grok-4.7-high`, pero `cursor-grok-4.6-high`) y cambian con cada versión. Pasa el **nivel** a
+`-Modelo`/`--modelo`: `scripts/resolver-modelo` lee `cursor-agent --list-models`, toma la versión más
+alta de Grok (o de Composer), aplica el esfuerzo del nivel y valida que el id exista. Si esa versión no
+trae el esfuerzo pedido, baja al más cercano y avisa por stderr. Así, cuando salga Grok 4.8 o 5, el plugin
+lo usa solo.
+
+**Si el usuario fija un modelo** (en la tabla del `CLAUDE.md` pone un id exacto en lugar de un nivel), se
+respeta ese id tal cual: el script solo comprueba que exista. Una corrección vuelve al **mismo** agente
+con el **mismo** modelo (usa el id ya resuelto, que queda en la línea `inicio` del log).
+
+## Cascada cuando se acaba el cupo
+
+Se degrada de a un escalón, y solo cuando el anterior falla por cupo. Cursor `auto` va **antes** que
+Claude: nunca saltes directo a Sonnet.
+
+1. **Grok / Composer** (según el nivel). Se intenta **siempre primero**: no hay forma de consultar el
+   cupo restante sin gastarlo (la CLI no lo expone), y un intento sin cupo falla al instante y sin coste
+   apreciable, así que el propio lanzamiento hace de sonda. Cuando Cursor renueva el cupo, la siguiente
+   pieza vuelve sola a Grok/Composer.
+2. **Cursor `auto`, reintento automático.** Si el agente muere con `You're out of usage. Switch to Auto…`,
+   el lanzador **reintenta solo con `auto`** en el mismo worktree (con una nota para que continúe desde
+   lo ya hecho), escribe `reintento-auto` en el log y el vigía emite `AUTO:`. No hay que intervenir:
+   solo informa al usuario en una línea. `auto` también se usa con las piezas complejas.
+3. **Claude**, solo si `auto` también responde sin cupo (`CUPO:` del vigía) **y el usuario confirma**
+   (gasta el cupo de Claude: pregúntale en una línea antes de lanzar, y mientras esperas no dejes nada
+   corriendo): subagente con la herramienta
+   Agent e `isolation: "worktree"`, eligiendo el modelo por dificultad —`model: "sonnet"` para piezas
+   complejas, `model: "haiku"` para las sencillas—. Para retomar un worktree que ya existe,
+   indícale su ruta en el prompt. Informa al usuario. Los subagentes de Claude tienen su propio límite;
+   si también se cortan, avisa al usuario y espera.
 
 ## Cuántos a la vez
 
@@ -34,9 +64,9 @@ Despliegues y todo lo que toque un recurso compartido (servidor, base de datos):
 2. Comprueba que el issue y la spec están **commiteados** en la rama principal.
 3. Lanza en segundo plano (`run_in_background`):
    - Windows (herramienta PowerShell):
-     `& "<skill>/scripts/lanzar-agente.ps1" -Nombre dp-NN-slug -Modelo <modelo> -PromptFile .scratch/<feature>/logs/NN-lanzar.md`
+     `& "<skill>/scripts/lanzar-agente.ps1" -Nombre dp-NN-slug -Modelo <nivel|id> -PromptFile .scratch/<feature>/logs/NN-lanzar.md`
      Para retomar un worktree existente: `-Worktree "<ruta>"` en vez de crear uno nuevo.
-   - macOS/Linux: `bash "<skill>/scripts/lanzar-agente.sh" --nombre dp-NN-slug --modelo <modelo> --prompt-file <ruta> [--worktree <ruta>]`
+   - macOS/Linux: `bash "<skill>/scripts/lanzar-agente.sh" --nombre dp-NN-slug --modelo <nivel|id> --prompt-file <ruta> [--worktree <ruta>]`
    El script escribe `inicio` y `fin exit=N` en `<prompt>-cursor.out` (p. ej.
    `logs/NN-lanzar-cursor.out`; o el que pases con `-Log`/`--log`) y deja su PID en `<log>.pid`.
    El worktree nuevo lo crea Cursor; su ruta real sale en `git worktree list` (en Windows suele ser
@@ -51,8 +81,8 @@ Un agente muerto (memoria, cupo, colgado) deja su trabajo sin commit en el workt
 relánzalo con `-Worktree <ruta>` y el prompt de "retomar" de `plantillas.md` (commit WIP → merge de la
 rama principal → terminar). Si otra pieza se fusionó mientras tanto, ese merge evita conflictos al final.
 
-## Alternativas cuando Cursor no está disponible
+## Cursor no disponible por otra causa
 
-Si el usuario lo autoriza: subagentes de Claude en worktree aislado (herramienta Agent con
-`isolation: "worktree"` y un modelo más barato). Tienen su propio límite de uso por sesión: si también
-se cortan, retoma en el mismo worktree con Cursor `auto`.
+Sin cupo se aplica la cascada de arriba. Si Cursor falla por otra razón (no instalado, sin sesión, red
+caída), no es un caso de cupo: arréglalo (`problemas-conocidos.md`, "El agente no arranca") o pregunta al
+usuario antes de pasar a subagentes de Claude.

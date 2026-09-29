@@ -6,8 +6,10 @@ técnico:
 1. **Entiende** la tarea (te hace preguntas por rondas si es grande o ambigua).
 2. **Planifica**: escribe una spec y la parte en piezas pequeñas (issues), cada una en su archivo.
 3. **Delega** cada pieza a un agente de **Cursor CLI** (`cursor-agent`) en su propio worktree de git,
-   eligiendo el modelo según la dificultad (uno fuerte para lo complejo, uno rápido para lo sencillo,
-   `auto` cuando se acaba el cupo de Cursor).
+   eligiendo el modelo según la dificultad: el **Grok más reciente** para lo complejo (esfuerzo `high`) y el **Composer más reciente** para lo sencillo. Los ids se leen de
+   `cursor-agent --list-models`, así que se actualizan solos con cada versión nueva (o fijas uno tú).
+   Si se acaba el cupo de Cursor, el lanzador reintenta solo con Cursor en modo `auto`; solo si `auto`
+   también se agota (y tú confirmas) pasa a subagentes de Claude (Sonnet para lo difícil, Haiku para lo sencillo).
 4. **Vigila** a cada agente con un script liviano (sin gastar tokens) que avisa cuando hay commit,
    cuando se estanca o cuando termina.
 5. **Revisa** cada diff contra la spec y una lista de problemas reales (seguridad, privacidad,
@@ -72,7 +74,7 @@ El plugin no instala hooks, no cambia la configuración de Claude Code y no deja
 .claude-plugin/          manifiesto del plugin y del marketplace
 skills/orquestar/        la metodología (SKILL.md) + referencias + scripts
   referencias/           lanzar, vigilar, revisar, cerrar, plantillas, problemas conocidos
-  scripts/               lanzar-agente (.ps1/.sh), vigilar-agente.sh, revisar-recursos (.ps1/.sh),
+  scripts/               lanzar-agente (.ps1/.sh), resolver-modelo (.ps1/.sh), vigilar-agente.sh, revisar-recursos (.ps1/.sh),
                          limpiar-worktrees.sh
 skills/orquestador-setup/  preparación del proyecto (se invoca a mano)
 skills/orquestador-quitar/ deshace la preparación en un proyecto (se invoca a mano)

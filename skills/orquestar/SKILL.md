@@ -27,9 +27,12 @@ carga de la skill). Antes de la primera tarea en un proyecto, confirma que se co
    Plantillas: [referencias/plantillas.md](referencias/plantillas.md). **Commitea a la rama principal
    antes de lanzar**: cada worktree nace de ese commit.
    Hecho cuando: cada issue se puede ejecutar sin preguntarte nada.
-3. **Clasificar y lanzar.** Cada issue es _sencillo_ o _complejo_ → modelo según la tabla del
-   `CLAUDE.md` del proyecto. Piezas con archivos disjuntos van en paralelo **solo si la RAM alcanza**
-   (`scripts/revisar-recursos`). Lanza con `scripts/lanzar-agente` en segundo plano.
+3. **Clasificar y lanzar.** Cada issue es _sencillo_ o _complejo_ → pasa ese nivel a
+   `-Modelo` (Grok más reciente esfuerzo `high` para complejo, Composer para sencillo; el script resuelve el id
+   exacto, nunca lo escribas a mano). Si el usuario fijó un modelo en la tabla del `CLAUDE.md`, usa ese.
+   Sin cupo en Cursor el lanzador reintenta solo con `auto`; solo si `auto` también se agota, y el usuario confirma, pasa a Claude:
+   Sonnet para lo complejo, Haiku para lo sencillo (cascada en `lanzar.md`).
+   Piezas con archivos disjuntos van en paralelo **solo si la RAM alcanza** (`scripts/revisar-recursos`). Lanza con `scripts/lanzar-agente` en segundo plano.
    Detalle y fallas de lanzamiento: [referencias/lanzar.md](referencias/lanzar.md).
    Hecho cuando: el worktree existe y el log del agente tiene la línea `inicio`.
 4. **Vigilar.** Por cada agente, un monitor con `scripts/vigilar-agente.sh` (commit, 15 min sin
@@ -37,7 +40,7 @@ carga de la skill). Antes de la primera tarea en un proyecto, confirma que se co
    después de terminar. Ver [referencias/vigilar.md](referencias/vigilar.md).
    Hecho cuando: el agente hizo su commit final o el vigía avisó de un problema.
 5. **Revisar el diff** contra la spec con la lista de [referencias/revisar.md](referencias/revisar.md).
-   Algo mal → devuélvelo al **mismo** agente, en su mismo worktree y con el mismo modelo, con
+   Algo mal → devuélvelo al **mismo** agente, en su mismo worktree y con el mismo modelo (o `auto` si ya se cayó en la cascada), con
    correcciones concretas en un archivo. Repite hasta aprobar.
    Hecho cuando: cada punto de la lista está verificado, no supuesto.
 6. **Fusionar y cerrar.** `git merge --no-ff` a la rama principal, verificación completa en la rama

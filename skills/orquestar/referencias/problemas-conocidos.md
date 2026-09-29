@@ -11,9 +11,15 @@ la conexión con Cursor. Arreglo: el vigía avisa el `COMMIT`; revisa y termina 
 que terminan con `process.exit`.
 
 **`You're out of usage. Switch to Auto…`**
-Causa: se agotó el cupo del plan de Cursor para ese modelo. Arreglo: relanza con `--model auto` en el
-mismo worktree (`-Worktree`), y usa `auto` para todo hasta que el usuario diga otra cosa. Anótalo en el
-bloque `## Orquestador` del `CLAUDE.md`.
+Causa: se agotó el cupo del plan de Cursor para ese modelo. El lanzador ya lo maneja: reintenta solo con
+`auto` en el mismo worktree (`reintento-auto` en el log, `AUTO:` del vigía). Solo si `auto` también se
+queda sin cupo aparece `cupo-agotado` / `CUPO:`: pasa a subagentes de Claude (`lanzar.md`, cascada). Si un
+agente murió por cupo y el lanzador no reintentó (p. ej. lo lanzaste sin el script), relánzalo tú con
+`-Modelo auto -Worktree <ruta>`.
+
+**Cursor rechaza el modelo al lanzar (el agente muere en segundos).** Se escribió a mano un id (`grok-4.8-high`) que
+no existe o tiene otro prefijo (`cursor-grok-…`). Pasa un nivel (`complejo`, `sencillo`) y deja
+que `resolver-modelo` lo resuelva; el lanzador aborta antes de gastar un agente si el id no existe.
 
 **El agente no deja commit.**
 Causa: lo olvidó o murió antes. Arreglo: si el diff está aprobado, commitea tú en su worktree; si está a

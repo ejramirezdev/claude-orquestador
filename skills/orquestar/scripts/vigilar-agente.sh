@@ -8,6 +8,8 @@
 # Eventos:
 #   COMMIT: <sha> <mensaje>          nuevo commit en el worktree
 #   ALERTA: N min sin avance         ni commit ni cambios en el log de progreso
+#   AUTO: <detalle>                  sin cupo con el modelo del nivel; el lanzador reintentó solo con auto
+#   CUPO: <detalle>                  tampoco auto tuvo cupo: pasar a Sonnet/Haiku (AUTO y CUPO salen antes del FIN)
 #   FIN: <línea fin/error del log>   el lanzador terminó (o su proceso desapareció)
 #   PROGRESO: <línea>                solo con --verbose
 set -uo pipefail
@@ -31,6 +33,11 @@ fin() { # $1 = motivo
   if [ -n "$worktree" ] && [ -d "$worktree" ]; then
     extra=" | último commit: $(git -C "$worktree" log --oneline -1 2>/dev/null) | sin commit: $(git -C "$worktree" status --porcelain 2>/dev/null | wc -l | tr -d ' ') archivo(s)"
   fi
+  local cupo auto
+  auto=$(grep -E "^reintento-auto " "$log" 2>/dev/null | tail -1)
+  [ -z "$auto" ] || echo "AUTO: el modelo se quedó sin cupo y el lanzador reintentó con auto (${auto#reintento-auto })"
+  cupo=$(grep -E "^cupo-agotado " "$log" 2>/dev/null | tail -1)
+  [ -z "$cupo" ] || echo "CUPO: Cursor sin cupo incluso con auto (${cupo#cupo-agotado }) — pasa a Sonnet/Haiku (lanzar.md)"
   echo "FIN: $1$extra"
   exit 0
 }

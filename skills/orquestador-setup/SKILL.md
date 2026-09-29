@@ -24,10 +24,14 @@ usuario el resultado de cada uno en una línea y pide solo lo que no puedas hace
      pidas que escriba ningún comando. Si el comando corta por timeout antes de que termine, vuelve a
      correr `cursor-agent status`: si ya quedó autenticado, sigue; si no, repite `cursor-agent login`.
    Hecho cuando: `cursor-agent models` lista modelos.
-2. **Modelos.** Muestra los modelos disponibles y pregunta cuál usar para piezas **complejas** y cuál
-   para **sencillas** (recomendación: el más fuerte de razonamiento para complejas, uno rápido para
-   sencillas; `auto` como respaldo cuando se acabe el cupo).
-   Hecho cuando: el usuario eligió los dos.
+2. **Modelos.** Por defecto no se fija ningún id: `complejo` = Grok más reciente (esfuerzo high),
+   `sencillo` = Composer más reciente, y así se actualizan solos
+   cuando Cursor publique versiones nuevas. Comprueba con `../orquestar/scripts/resolver-modelo` (`.ps1`
+   en Windows) qué ids resuelven hoy en esta cuenta y muéstraselos al usuario. Pregunta solo si quiere
+   **fijar** un modelo concreto para algún nivel (entonces se guarda el id exacto, validado con
+   `cursor-agent models`, y deja de actualizarse solo). Si la cuenta no tiene Grok o Composer, díselo y
+   pregunta qué usar en su lugar.
+   Hecho cuando: cada nivel resuelve a un id existente, o el usuario eligió uno fijo.
 3. **Bloque en `CLAUDE.md`** del proyecto, entre los marcadores exactos de abajo (créalo si no existe; si
    los marcadores ya están, reemplaza lo que hay entre ellos y no toques nada fuera):
 
@@ -41,11 +45,17 @@ usuario el resultado de cada uno en una línea y pide solo lo que no puedas hace
    Si la skill `orquestar` no está disponible (plugin desactivado o desinstalado), ignora este bloque y
    trabaja de forma normal.
 
-   | Pieza | Modelo |
+   | Pieza | Modelo (nivel o id fijo) |
    |---|---|
-   | Compleja (lógica nueva, varias partes del código, diseño, seguridad) | `<modelo complejo>` |
-   | Sencilla (cambio mecánico, correr un script, commit) | `<modelo sencillo>` |
-   | Sin cupo en Cursor | `auto` para todo hasta nuevo aviso |
+   | Compleja (seguridad, lógica nueva, varias partes del código, diseño) | `complejo` |
+   | Sencilla (cambio mecánico, correr un script, commit) | `sencillo` |
+
+   Los niveles los resuelve `scripts/resolver-modelo` al lanzar: `complejo` = Grok más reciente
+   (esfuerzo high), `sencillo` = Composer más reciente. No escribas ids a mano. Si un nivel tiene un id
+   fijo, reemplaza el nivel por ese id.
+   Sin cupo, en este orden: el lanzador reintenta solo con Cursor `auto` y, solo si `auto` también se
+   agota y el usuario lo confirma, subagentes de Claude (Sonnet para lo complejo, Haiku para lo sencillo; cascada en
+   `lanzar.md` de la skill `orquestar`).
 
    - Agentes en paralelo: máximo <N> (según la RAM de esta máquina); verificar UNO A LA VEZ.
    - Rama principal: `<rama>`. Verificaciones del proyecto: `<comandos exactos, en orden>`.
