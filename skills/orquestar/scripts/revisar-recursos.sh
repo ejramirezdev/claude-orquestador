@@ -12,6 +12,14 @@ else
   total_mb=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
 fi
 echo "RAM disponible: $(( libre_mb / 1024 )) GB de $(( total_mb / 1024 )) GB"
+disco_gb=$(df -Pk . 2>/dev/null | awk 'NR==2 {print int($4/1024/1024)}')
+secundarios=$(( $(git worktree list 2>/dev/null | wc -l) - 1 )); [ "$secundarios" -ge 0 ] || secundarios=0
+echo "Disco libre: ${disco_gb:-?} GB    Worktrees acumulados: $secundarios"
+if [ -n "$disco_gb" ] && [ "$disco_gb" -lt 10 ]; then
+  echo "  DISCO BAJO: no lances agentes nuevos. Corre limpiar-worktrees.sh --aplicar --artefactos."
+elif [ "$secundarios" -ge 8 ]; then
+  echo "  Muchos worktrees: corre limpiar-worktrees.sh (lista) y después --aplicar."
+fi
 echo
 echo "Procesos node (tipo, pid, padre, MB, comando):"
 ps -eo pid=,ppid=,rss=,command= | awk '/[n]ode/ {

@@ -31,6 +31,21 @@ command -v cursor-agent >/dev/null || { echo "cursor-agent no está en el PATH (
 
 [ -n "$log" ] || log="${prompt_file%.*}-cursor.out"
 
+# Guarda de disco: cada worktree nuevo trae sus dependencias y su compilación (gigas). Sin esto los
+# worktrees se acumulan hasta llenar el disco. Mínimo configurable con ORQ_DISCO_MIN_GB (0 = sin guarda).
+min_gb="${ORQ_DISCO_MIN_GB:-10}"
+libre_gb=$(df -Pk . 2>/dev/null | awk 'NR==2 {print int($4/1024/1024)}')
+secundarios=$(( $(git worktree list 2>/dev/null | wc -l) - 1 ))
+if [ -n "$libre_gb" ] && [ "$min_gb" -gt 0 ] && [ "$libre_gb" -lt "$min_gb" ]; then
+  if [ -z "$worktree" ]; then
+    echo "disco casi lleno: ${libre_gb} GB libres (mínimo ${min_gb}) y ${secundarios} worktree(s) acumulados." >&2
+    echo "Antes de lanzar: bash \"$(dirname "${BASH_SOURCE[0]}")/limpiar-worktrees.sh\" --aplicar --artefactos" >&2
+    exit 3
+  fi
+  echo "aviso: solo ${libre_gb} GB libres; se retoma el worktree existente, pero limpia cuanto antes." >&2
+fi
+[ "$secundarios" -lt 8 ] || echo "aviso: ${secundarios} worktrees acumulados; corre limpiar-worktrees.sh tras fusionar." >&2
+
 # --modelo acepta un nivel (complejo | sencillo | auto) o un id exacto; se valida contra la lista
 # real de la cuenta antes de gastar un agente. Ver resolver-modelo.sh.
 modelo=$(bash "$(dirname "${BASH_SOURCE[0]}")/resolver-modelo.sh" "$modelo" | tail -1) && [ -n "$modelo" ] \

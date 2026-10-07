@@ -21,11 +21,26 @@ Cada worktree lleva su propio `node_modules`: decenas se comen el disco y confun
 La causa de la basura acumulada es casi siempre la misma: el agente escribe su log de progreso sin
 trackear, el worktree queda "sucio" para siempre y ninguna limpieza se atreve a borrarlo.
 
+Caso real: 95 worktrees acumulados en dos semanas (subagentes de Claude en `.claude/worktrees` y
+agentes de Cursor en `~/.cursor/worktrees`) llenaron un disco de 475 GB; el aviso llegó cuando Claude
+ya no podía guardar la conversación. La limpieza no es opcional ni "para después".
+
 - Prevención (lo hace `/orquestador-setup`): `.gitignore` con `.scratch/**/logs/`,
   `.scratch/**/*progreso*`, `*.pid`.
+- Guarda automática: `lanzar-agente` se niega a crear un worktree nuevo con menos de 10 GB libres
+  (`ORQ_DISCO_MIN_GB` lo ajusta) y avisa a partir de 8 worktrees acumulados. `revisar-recursos` muestra
+  disco libre y cantidad de worktrees. Los subagentes de Claude (`isolation: "worktree"`) no pasan por
+  el lanzador: corre `revisar-recursos` antes de lanzarlos.
 - Borrado seguro: `bash "<skill>/scripts/limpiar-worktrees.sh"` lista qué se puede borrar (rama ya
-  fusionada + árbol limpio o solo archivos ignorados) y con `--aplicar` lo borra. La rama se conserva:
-  borrar el worktree no pierde código.
+  fusionada + sin cambios en archivos trackeados) y con `--aplicar` lo borra. La rama se conserva salvo
+  `--borrar-ramas`: borrar el worktree no pierde código. Cubre los worktrees de Cursor y los de Claude.
+- Un worktree fusionado que solo tiene archivos sin trackear se conserva y se lista; tras revisarlos,
+  `--incluir-sin-trackear` lo borra.
+- Worktrees que aún no se pueden borrar (rama sin fusionar, trabajo a medias): `--aplicar --artefactos`
+  vacía sus carpetas de compilación (`.next`, `dist`, `.turbo`…), que se regeneran solas y suelen ser
+  lo que más pesa; `--con-dependencias` quita también `node_modules`.
+- Carpetas huérfanas (git ya no las registra) se listan y no se borran solas: no hay rama que respalde
+  su contenido.
 - Windows: `git worktree remove` a veces quita el registro pero no el directorio (rutas largas). El
   script borra el resto con `rm -rf` en lotes de 8 y en primer plano; `robocopy /MIR` gasta demasiada
   memoria.

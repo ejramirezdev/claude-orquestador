@@ -8,6 +8,15 @@ $os = Get-CimInstance Win32_OperatingSystem
 $libreGB = [math]::Round($os.FreePhysicalMemory / 1MB, 1)
 $totalGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
 "RAM libre: $libreGB GB de $totalGB GB"
+$unidad = (Get-Item -LiteralPath (Get-Location).Path).PSDrive
+$discoGB = if ($unidad -and $null -ne $unidad.Free) { [math]::Floor($unidad.Free / 1GB) } else { $null }
+$secundarios = [math]::Max(0, @(git worktree list 2>$null).Count - 1)
+"Disco libre: $discoGB GB    Worktrees acumulados: $secundarios"
+if ($null -ne $discoGB -and $discoGB -lt 10) {
+  "  DISCO BAJO: no lances agentes nuevos. Corre limpiar-worktrees.sh --aplicar --artefactos."
+} elseif ($secundarios -ge 8) {
+  "  Muchos worktrees: corre limpiar-worktrees.sh (lista) y después --aplicar."
+}
 
 try {
   $c = Get-Counter '\Memory\Pool Nonpaged Bytes', '\Memory\Pool Paged Bytes' -ErrorAction Stop

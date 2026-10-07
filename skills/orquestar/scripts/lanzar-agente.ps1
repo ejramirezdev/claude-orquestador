@@ -46,6 +46,20 @@ if (-not $Log) {
   $Log = Join-Path $dir "$stem-cursor.out"
 }
 
+# Guarda de disco: cada worktree nuevo trae sus dependencias y su compilación (gigas). Sin esto los
+# worktrees se acumulan hasta llenar el disco. Mínimo configurable con ORQ_DISCO_MIN_GB (0 = sin guarda).
+$minGB = if ($env:ORQ_DISCO_MIN_GB) { [int]$env:ORQ_DISCO_MIN_GB } else { 10 }
+$unidad = (Get-Item -LiteralPath (Get-Location).Path).PSDrive
+$libreDiscoGB = if ($unidad -and $null -ne $unidad.Free) { [math]::Floor($unidad.Free / 1GB) } else { $null }
+$secundarios = [math]::Max(0, @(git worktree list 2>$null).Count - 1)
+if ($null -ne $libreDiscoGB -and $minGB -gt 0 -and $libreDiscoGB -lt $minGB) {
+  if (-not $Worktree) {
+    throw "Disco casi lleno: $libreDiscoGB GB libres (mínimo $minGB) y $secundarios worktree(s) acumulados. Antes de lanzar: bash `"$PSScriptRoot/limpiar-worktrees.sh`" --aplicar --artefactos"
+  }
+  Write-Warning "Solo $libreDiscoGB GB libres; se retoma el worktree existente, pero limpia cuanto antes."
+}
+if ($secundarios -ge 8) { Write-Warning "$secundarios worktrees acumulados; corre limpiar-worktrees.sh tras fusionar." }
+
 # -Modelo acepta un nivel (complejo | sencillo | auto) o un id exacto; en ambos casos se valida
 # contra la lista real de la cuenta antes de gastar un agente. Ver resolver-modelo.ps1.
 $Modelo = (& "$PSScriptRoot\resolver-modelo.ps1" $Modelo | Select-Object -Last 1)
