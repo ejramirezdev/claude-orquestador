@@ -41,6 +41,11 @@ ya no podía guardar la conversación. La limpieza no es opcional ni "para despu
   lo que más pesa; `--con-dependencias` quita también `node_modules`.
 - Carpetas huérfanas (git ya no las registra) se listan y no se borran solas: no hay rama que respalde
   su contenido.
+- **Enlaces hacia el repositorio principal.** Un worktree puede tener `node_modules` enlazado
+  (symlink o junction) al del checkout principal. Borrarlo con `rm -rf` o `git worktree remove --force`
+  en Windows puede seguir el enlace y vaciar las dependencias del principal. El script quita primero
+  esos enlaces sin seguirlos; nunca borres worktrees a mano con `rm -rf` sin hacer lo mismo. Si pasó:
+  reinstala en el principal (`pnpm install --frozen-lockfile` o equivalente) y vuelve a verificar.
 - Windows: `git worktree remove` a veces quita el registro pero no el directorio (rutas largas). El
   script borra el resto con `rm -rf` en lotes de 8 y en primer plano; `robocopy /MIR` gasta demasiada
   memoria.

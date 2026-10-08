@@ -82,9 +82,28 @@ fi
 
 [ $aplicar -eq 1 ] || { echo; echo "Nada borrado. Repite con --aplicar (y --artefactos para vaciar compilaciones de los que se conservan)."; exit 0; }
 
+# Antes de borrar cualquier carpeta: quitar los enlaces (symlinks o junctions de Windows) que apunten
+# FUERA de ella, sin seguirlos. Un worktree puede tener su node_modules enlazado al del repositorio
+# principal; borrar el worktree siguiendo ese enlace vacía las dependencias del principal (pasó de verdad).
+quitar_enlaces() { # $1 = carpeta
+  local enlace
+  while IFS= read -r enlace; do
+    [ -n "$enlace" ] || continue
+    if command -v cygpath >/dev/null 2>&1; then
+      cmd //c rmdir "$(cygpath -w "$enlace")" >/dev/null 2>&1 || cmd //c del "$(cygpath -w "$enlace")" >/dev/null 2>&1
+    else
+      unlink "$enlace" 2>/dev/null
+    fi
+    # Si el enlace sigue ahí no se arriesga el borrado recursivo de esa carpeta.
+    [ -L "$enlace" ] && return 1
+  done < <(find "$1" -maxdepth 6 -type l -not -path '*/node_modules/*' 2>/dev/null)
+  return 0
+}
+
 lote=0
 for b in ${borrables[@]+"${borrables[@]}"}; do
   ruta="${b%%|*}" rama="${b##*|}"
+  quitar_enlaces "$ruta" || { echo "NO borrado (tiene enlaces que no se pudieron quitar): $ruta"; continue; }
   git worktree remove --force "$ruta" 2>/dev/null
   # En Windows, remove suele dejar el directorio por rutas largas: se borra aparte.
   [ -d "$ruta" ] && rm -rf "$ruta"
@@ -105,8 +124,10 @@ if [ $artefactos -eq 1 ]; then
       while IFS= read -r dir; do
         [ -n "$dir" ] || continue
         git -C "$t" check-ignore -q "$dir" 2>/dev/null || continue
+        # Un node_modules (u otra carpeta) que es un enlace hacia otro lugar se desenlaza, nunca se vacía.
+        if [ -L "$dir" ]; then quitar_enlaces "$(dirname "$dir")"; continue; fi
         rm -rf "$dir" && echo "artefacto borrado: $dir"
-      done < <(find "$t" -maxdepth 4 -type d -name "$n" -not -path '*/node_modules/*' -prune 2>/dev/null)
+      done < <(find "$t" -maxdepth 4 \( -type d -o -type l \) -name "$n" -not -path '*/node_modules/*' -prune 2>/dev/null)
     done
   done
 fi
