@@ -66,6 +66,9 @@ done < <(git worktree list --porcelain)
 huerfanos=()
 while IFS= read -r padre; do
   [ -d "$padre" ] || continue
+  # Solo carpetas dedicadas a worktrees: un worktree creado en /tmp o en la carpeta de proyectos no
+  # convierte en "huérfanos" a sus vecinos.
+  case "$padre/" in */worktrees/*) ;; *) continue ;; esac
   for d in "$padre"/*/; do
     d="${d%/}"; [ -d "$d" ] || continue
     [ -e "$d/.git" ] || huerfanos+=("$d")
@@ -100,13 +103,30 @@ quitar_enlaces() { # $1 = carpeta
   return 0
 }
 
+# Borrado recursivo que NO sigue enlaces. En Windows, `rm -rf` de Git Bash y `git worktree remove --force`
+# pueden entrar por una junction (p. ej. node_modules/.bin enlazado al repositorio principal, a cualquier
+# profundidad) y vaciar el destino; `rmdir /s /q` de cmd quita la junction sin tocar a dónde apunta.
+borrar_dir() { # $1 = carpeta
+  if command -v cygpath >/dev/null 2>&1; then
+    cmd //c rmdir //s //q "$(cygpath -w "$1")" >/dev/null 2>&1
+  else
+    rm -rf "$1"
+  fi
+  [ ! -e "$1" ]
+}
+
 lote=0
 for b in ${borrables[@]+"${borrables[@]}"}; do
   ruta="${b%%|*}" rama="${b##*|}"
   quitar_enlaces "$ruta" || { echo "NO borrado (tiene enlaces que no se pudieron quitar): $ruta"; continue; }
-  git worktree remove --force "$ruta" 2>/dev/null
-  # En Windows, remove suele dejar el directorio por rutas largas: se borra aparte.
-  [ -d "$ruta" ] && rm -rf "$ruta"
+  if command -v cygpath >/dev/null 2>&1; then
+    # Windows: nunca `git worktree remove --force` ni `rm -rf` (siguen junctions). Se borra la carpeta y
+    # `git worktree prune` (al final) quita el registro.
+    borrar_dir "$ruta" || { echo "NO se pudo borrar del todo: $ruta"; continue; }
+  else
+    git worktree remove --force "$ruta" 2>/dev/null
+    [ -d "$ruta" ] && rm -rf "$ruta"
+  fi
   [ $ramas -eq 1 ] && git branch -d "$rama" >/dev/null 2>&1
   echo "borrado: $ruta"
   lote=$(( lote + 1 ))
@@ -126,7 +146,7 @@ if [ $artefactos -eq 1 ]; then
         git -C "$t" check-ignore -q "$dir" 2>/dev/null || continue
         # Un node_modules (u otra carpeta) que es un enlace hacia otro lugar se desenlaza, nunca se vacía.
         if [ -L "$dir" ]; then quitar_enlaces "$(dirname "$dir")"; continue; fi
-        rm -rf "$dir" && echo "artefacto borrado: $dir"
+        borrar_dir "$dir" && echo "artefacto borrado: $dir"
       done < <(find "$t" -maxdepth 4 \( -type d -o -type l \) -name "$n" -not -path '*/node_modules/*' -prune 2>/dev/null)
     done
   done

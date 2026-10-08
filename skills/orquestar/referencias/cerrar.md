@@ -43,12 +43,12 @@ ya no podía guardar la conversación. La limpieza no es opcional ni "para despu
   su contenido.
 - **Enlaces hacia el repositorio principal.** Un worktree puede tener `node_modules` enlazado
   (symlink o junction) al del checkout principal. Borrarlo con `rm -rf` o `git worktree remove --force`
-  en Windows puede seguir el enlace y vaciar las dependencias del principal. El script quita primero
+  en Windows puede seguir el enlace y vaciar las dependencias del principal. El enlace puede estar a cualquier profundidad (p. ej. `node_modules/.bin`). En Windows el script borra con `rmdir /s /q` de cmd, que quita la junction sin tocar su destino, y además quita primero
   esos enlaces sin seguirlos; nunca borres worktrees a mano con `rm -rf` sin hacer lo mismo. Si pasó:
   reinstala en el principal (`pnpm install --frozen-lockfile` o equivalente) y vuelve a verificar.
-- Windows: `git worktree remove` a veces quita el registro pero no el directorio (rutas largas). El
-  script borra el resto con `rm -rf` en lotes de 8 y en primer plano; `robocopy /MIR` gasta demasiada
-  memoria.
+- Windows: `git worktree remove` a veces quita el registro pero no el directorio (rutas largas), y
+  sigue junctions. El script borra la carpeta con `rmdir /s /q` en lotes de 8 y deja que
+  `git worktree prune` quite el registro; `robocopy /MIR` gasta demasiada memoria.
 
 ## Desplegar
 
