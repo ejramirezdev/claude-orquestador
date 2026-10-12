@@ -47,10 +47,12 @@ aplica se descarta explícitamente, no se salta.
 - **Idioma y tono** del texto al usuario final según la convención del proyecto.
 
 ## Verificación
-Corre tú, en el worktree o tras fusionar en la rama principal, las verificaciones del proyecto (tipos,
+El agente no verifica: corre tú, una sola vez y tras fusionar en la rama principal, las verificaciones del proyecto (tipos,
 lint, tests y compilación si hay dependencias o assets nuevos). Una por una y leyendo el **código de
 salida del comando**, no el de un `| tail`. Errores preexistentes que aparezcan también se arreglan.
 
 ## Devolver
 Cada hallazgo como: problema concreto → resultado esperado → por qué importa (la consecuencia real).
-Todo en un archivo de revisión (`plantillas.md`) y al mismo agente, en el mismo worktree.
+Los hallazgos menores (pocas líneas, borrados, un estilo) los corriges tú tras fusionar: devolverlos
+recarga toda la sesión del agente. Lo de fondo va en un archivo de revisión (`plantillas.md`), al mismo
+agente y en el mismo worktree.

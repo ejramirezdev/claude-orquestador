@@ -7,11 +7,13 @@ La tabla vigente vive en el bloque `## Orquestador` del `CLAUDE.md` del proyecto
 
 | Nivel | Ejemplos | Modelo que resuelve `-Modelo <nivel>` |
 |---|---|---|
-| `complejo` | seguridad, arquitectura, lógica nueva, varias partes del código a la vez, diseño, IA | **Grok más reciente**, esfuerzo `high` |
-| `sencillo` | cambio mecánico de una pieza, correr un script ya escrito, commit, renombrar | **Composer más reciente** |
+| `complejo` | seguridad, arquitectura, diseño, IA, varias partes del código a la vez | **Grok más reciente**, esfuerzo `high` |
+| `sencillo` | pieza acotada y bien especificada (aunque tenga algo de lógica), cambio mecánico, renombrar | **Composer más reciente** |
 | `auto` | Cursor recomienda pasar a Auto (cupo del modelo agotado) | modo `auto` de Cursor, para todo |
 
-Ante la duda, _complejo_: rehacer un diff malo cuesta más que el modelo caro.
+Ante la duda entre los dos, mira el issue: si fija archivos, firmas y pasos, _sencillo_ alcanza; si deja
+decisiones de diseño al agente, _complejo_ (rehacer un diff malo cuesta más que el modelo caro). Un cambio
+de uno o dos archivos sin lógica de negocio no necesita agente: lo hace el líder.
 
 **Nunca escribas a mano el id de un modelo Grok o Composer.** Los ids no siguen un patrón único
 (`grok-4.7-high`, pero `cursor-grok-4.6-high`) y cambian con cada versión. Pasa el **nivel** a
@@ -47,12 +49,12 @@ Claude: nunca saltes directo a Sonnet.
 
 ## Cuántos a la vez
 
-Cada agente corre instalaciones, verificaciones de tipos y compilaciones: en una laptop de 16 GB, dos
-agentes que compilan a la vez ya pueden agotar la RAM. Antes de lanzar, corre `scripts/revisar-recursos`
+Los agentes ya no instalan ni verifican (lo hace el líder tras fusionar), pero cada uno sigue ocupando
+memoria y un worktree en disco. Antes de lanzar, corre `scripts/revisar-recursos`
 y decide:
 
 - **≥ 8 GB libres:** hasta 3 en paralelo si sus archivos son disjuntos.
-- **4–8 GB:** 1 o 2, y pídeles verificar UNO A LA VEZ y sin compilación completa salvo al final.
+- **4–8 GB:** 1 o 2.
 - **< 4 GB:** 1, y resuelve primero la causa (ver `problemas-conocidos.md`, "memoria").
 
 Despliegues y todo lo que toque un recurso compartido (servidor, base de datos): **siempre de a uno**.

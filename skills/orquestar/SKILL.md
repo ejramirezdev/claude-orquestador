@@ -9,8 +9,26 @@ Eres el **líder técnico**: planificas, repartes, vigilas y revisas. Los agente
 código. Tu contexto es el recurso escaso: gástalo en decidir y revisar, no en teclear código ni en
 trabajo mecánico.
 
-Única excepción: un cambio **trivial** (typo, una constante, un texto de una línea, resolver un conflicto
-de merge, tipar un parámetro de test) lo haces tú directo, sin levantar un agente.
+Lo que haces tú directo, sin levantar un agente (cada agente cuesta un arranque fijo de consumo de
+Cursor, sea la tarea grande o mínima):
+- un cambio **trivial** (typo, una constante, un texto de una línea, resolver un conflicto de merge);
+- un cambio **chico y acotado**: uno o dos archivos, sin lógica de negocio (un estilo, un texto, un atributo);
+- las **correcciones menores** que salgan de revisar el diff de un agente (pocas líneas, borrados).
+Lo que pida diseño, lógica nueva o varias partes del código va a un agente.
+
+## Economía del agente
+
+El consumo de Cursor se va en trabajo fijo que no depende del tamaño de la tarea. Cada issue lo evita:
+- **El agente escribe y hace commit; no verifica.** Sin instalar dependencias, generar código, tipos,
+  lint, suite de tests ni compilación: en un worktree recién creado fallan por preparación y el agente
+  gasta turnos en diagnosticarlo. La verificación completa la corres tú una vez, tras fusionar (paso 6).
+  Excepción: si el issue pide un test primero en rojo, el agente corre solo ese archivo de test.
+- **Issue autocontenido:** archivos exactos, fragmentos o firmas que necesita y las reglas que le
+  aplican. No le pidas leer el `CLAUDE.md` ni explorar el repo.
+- **Tope de alcance escrito:** lista cerrada de archivos; sin tests, constantes ni abstracciones que
+  el issue no pida.
+- **Modelo según el tamaño:** _sencillo_ para piezas acotadas y bien especificadas, aunque tengan algo
+  de lógica; _complejo_ solo con diseño o varias partes del código a la vez.
 
 Los scripts citados abajo están en la carpeta `scripts/` de esta skill (ruta base = la que muestra la
 carga de la skill). Antes de la primera tarea en un proyecto, confirma que se corrió `/orquestador-setup`
@@ -43,7 +61,7 @@ carga de la skill). Antes de la primera tarea en un proyecto, confirma que se co
    Narra cada evento al usuario en una línea. Nunca esperes solo la notificación de salida: los agentes se cuelgan después de terminar. Ver [referencias/vigilar.md](referencias/vigilar.md).
    Hecho cuando: el agente hizo su commit final o el vigía avisó de un problema.
 5. **Revisar el diff** contra la spec con la lista de [referencias/revisar.md](referencias/revisar.md).
-   Algo mal → devuélvelo al **mismo** agente, en su mismo worktree y con el mismo modelo (o `auto` si ya se cayó en la cascada), con
+   Un hallazgo menor (pocas líneas) lo corriges tú tras fusionar. Algo de fondo → devuélvelo al **mismo** agente, en su mismo worktree y con el mismo modelo (o `auto` si ya se cayó en la cascada), con
    correcciones concretas en un archivo. Repite hasta aprobar.
    Hecho cuando: cada punto de la lista está verificado, no supuesto.
 6. **Fusionar y cerrar.** `git merge --no-ff` a la rama principal, verificación completa en la rama

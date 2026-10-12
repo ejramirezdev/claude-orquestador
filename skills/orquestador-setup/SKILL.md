@@ -57,7 +57,7 @@ usuario el resultado de cada uno en una línea y pide solo lo que no puedas hace
    agota y el usuario lo confirma, subagentes de Claude (Sonnet para lo complejo, Haiku para lo sencillo; cascada en
    `lanzar.md` de la skill `orquestar`).
 
-   - Agentes en paralelo: máximo <N> (según la RAM de esta máquina); verificar UNO A LA VEZ.
+   - Agentes en paralelo: máximo <N> (según la RAM de esta máquina); los agentes no verifican; lo hace el líder tras fusionar.
    - Rama principal: `<rama>`. Verificaciones del proyecto: `<comandos exactos, en orden>`.
    - Despliegue: `<cómo, o "no aplica">`. Siempre staging antes que producción, uno a la vez.
    - Specs e issues en `.scratch/<feature>/`; estado para retomar en `.scratch/<feature>/ESTADO.md`.

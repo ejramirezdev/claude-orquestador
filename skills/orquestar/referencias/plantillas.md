@@ -37,7 +37,11 @@ Modelo: complejo | sencillo
 
 # NN — <título>
 
-Lee primero `.scratch/<feature>/spec.md` (§<secciones>) y <otros archivos>.
+Lee solo `.scratch/<feature>/spec.md` (§<secciones>) y los archivos listados abajo. No leas el
+`CLAUDE.md` ni explores el resto del repo: lo que necesitas está aquí.
+
+## Contexto que necesitas
+<fragmentos, firmas y rutas ya decididos; las dos o tres reglas del proyecto que sí le aplican>
 
 ## Objetivo
 <una o dos frases>
@@ -49,12 +53,14 @@ Lee primero `.scratch/<feature>/spec.md` (§<secciones>) y <otros archivos>.
 <pasos numerados, con nombres de funciones/rutas cuando ya estén decididos>
 
 ## Criterio de aceptación
-- Tests: <casos concretos que deben existir y pasar>
-- Verifica UNO A LA VEZ: <typegen/tsc/lint/tests/build exactos del proyecto>
+- Tests: <solo si la pieza los necesita: casos concretos; puedes correr ESE archivo de test, nada más>
+- NO verifiques: sin instalar dependencias, generar código, tipos, lint, suite completa ni compilación.
+  El líder verifica una vez, tras fusionar. Tampoco agregues tests, constantes ni abstracciones que este
+  issue no pida.
 - Sin bases de datos reales, sin desplegar, sin llamar APIs de pago.
 - Registra cada paso terminado, una línea con hora, en `.scratch/<feature>/logs/NN-progreso.md`
   (el vigía narra cada línea al líder: una línea por paso real, no un párrafo al final).
-- Al terminar, agrega al final de ese log un bloque `== RESUMEN ==` con cuatro partes: archivos tocados, cada verificación con su resultado, las decisiones que tomaste y el issue no fijaba, y la lista de prueba manual.
+- Al terminar, agrega al final de ese log un bloque `== RESUMEN ==` con tres partes: archivos tocados, las decisiones que tomaste y el issue no fijaba, y la lista de prueba manual.
 - Commit final en tu worktree con un mensaje que incluya lista de verificación manual y desviaciones.
 ```
 
@@ -63,8 +69,9 @@ Reglas para escribir issues que los agentes ejecutan bien:
   el issue fija su nombre, firma y archivo, y dice quién lo crea.
 - **Qué no hacer, dicho en positivo:** "deja un TODO `// <feature> Ola 2` y un comportamiento seguro"
   en vez de "no implementes X".
-- **Todo lo que dependa de la máquina** (memoria, verificaciones una a la vez) va en el issue: el agente
-  no sabe que otro agente corre al lado.
+- **Todo lo que dependa de la máquina** va en el issue: el agente no sabe que otro agente corre al lado.
+- **Autocontenido y con tope:** cada lectura y cada comando del agente gasta consumo de Cursor. Dale los
+  fragmentos en vez de mandarlo a buscarlos, y una lista cerrada de archivos.
 
 ## Prompt de lanzamiento (archivo `logs/NN-lanzar.md`)
 
@@ -72,9 +79,9 @@ Corto; el detalle vive en el issue:
 
 ```
 Implementa el issue .scratch/<feature>/issues/NN-<slug>.md en este worktree.
-Primero instala dependencias y genera código si el proyecto lo requiere (<comandos>).
-Lee el issue completo y todo lo que referencia. Otros agentes trabajan en paralelo en <áreas>: no las toques.
-Verifica UNO A LA VEZ (poca memoria). Registra avance en .scratch/<feature>/logs/NN-progreso.md.
+Lee el issue completo y solo lo que referencia. Otros agentes trabajan en paralelo en <áreas>: no las toques.
+No instales dependencias ni corras verificaciones (tipos, lint, tests, compilación): las corre el líder.
+Registra avance en .scratch/<feature>/logs/NN-progreso.md.
 Commit final en español neutro.
 ```
 
@@ -89,10 +96,10 @@ Revisa git status, git diff y logs/NN-progreso.md para ver qué está hecho, lee
 ## Prompt de corrección tras revisión (archivo `logs/NN-revision.md`)
 
 ```
-Revisión del commit <sha> (issue <ruta>). Corrige, con tests para cada punto:
+Revisión del commit <sha> (issue <ruta>). Corrige solo esto:
 1. <problema concreto> → <resultado esperado>. Por qué: <consecuencia real>.
 2. ...
-Verifica UNO A LA VEZ: <comandos>. Registra avance y haz commit en este worktree.
+No corras verificaciones. Registra avance y haz commit en este worktree.
 ```
 
 ## `ESTADO.md` (retomar tras reinicio o sesión nueva)
